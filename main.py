@@ -69,15 +69,10 @@ def get_track(track_id: int):
 # -------------------------
 @app.get("/lyrics")
 def get_lyrics(track_id: int):
-    url = f"https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id={track_id}"
-
-    data = safe_request(url)
-
-    # If blocked or failed
-    if "error" in data:
-        return data
-
     try:
+        data = mx.get_track_lyrics(track_id=track_id)
+
+        # safe extraction
         lyrics = (
             data.get("message", {})
                 .get("body", {})
@@ -86,13 +81,18 @@ def get_lyrics(track_id: int):
         )
 
         if not lyrics:
-            return {"error": "Lyrics not found"}
+            return {
+                "error": "Lyrics not found",
+                "raw": data
+            }
 
         return {"lyrics": lyrics}
 
     except Exception as e:
-        return {"error": str(e)}
-
+        return {
+            "error": "Musixmatch failed",
+            "details": str(e)
+        }
 
 # -------------------------
 # 🎤 Artist details
@@ -143,5 +143,7 @@ def trending_artists(country: str = "in"):
 # -------------------------
 @app.get("/debug")
 def debug(track_id: int):
-    url = f"https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id={track_id}"
-    return safe_request(url)
+    try:
+        return mx.get_track_lyrics(track_id=track_id)
+    except Exception as e:
+        return {"error": str(e)}
