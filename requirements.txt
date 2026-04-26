@@ -1,0 +1,3 @@
+musicxmatch_api
+fastapi
+uvicorn
